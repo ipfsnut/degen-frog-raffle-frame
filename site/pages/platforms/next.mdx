@@ -1,0 +1,320 @@
+# Next.js
+
+[Next.js](https://nextjs.org/docs) is a React framework for building full-stack web applications.
+
+## Quick Start
+
+You can scaffold a Frog project with Next.js integrated via the `create-frog` CLI:
+
+:::code-group
+
+```bash [npm]
+npm init frog -- -t next
+```
+
+```bash [pnpm]
+pnpm create frog -t next
+```
+
+```bash [yarn]
+yarn create frog -t next
+```
+
+```bash [bun]
+bunx create-frog -t next
+```
+
+:::
+
+## Manual Installation
+
+::::steps
+
+### Install Next.js
+
+```bash
+npm install next@latest react@latest react-dom@latest vercel@latest
+```
+
+### Build your Frame
+
+Next, scaffold your frame:
+
+```tsx twoslash [app/api/[[...routes]]/route.tsx]
+// @noErrors
+// ---cut---
+/** @jsxImportSource frog/jsx */
+import { Button, Frog, TextInput } from 'frog'
+
+const app = new Frog({ 
+  basePath: '/api',
+})
+
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+```
+
+:::warning
+Feel free to use our public Hub API URL for [frame verification](https://docs.farcaster.xyz/reference/frames/spec#securing-frames:~:text=Unsigned%20messages%20can%20be%20spoofed%20and%20should%20usually%20be%20ignored.%20It%20is%20only%20safe%20to%20use%20them%20if%20you%20are%20performing%20an%20unauthenticated%20request.): `https://api.hub.wevm.dev`.
+
+However, please note that this URL is not guaranteed to be stable. 
+It is recommended to use your own Hub API URL in production.
+:::
+
+### Add Handlers
+
+After that, we will add handlers to handle requests in the `api/` route:
+
+```tsx twoslash [app/api/[[...routes]]/route.tsx]
+// @noErrors
+// ---cut---
+/** @jsxImportSource frog/jsx */
+import { Button, Frog, TextInput } from 'frog'
+import { handle } from 'frog/next' // [!code focus]
+
+const app = new Frog({ 
+  basePath: '/api',
+})
+
+// Uncomment to use Edge Runtime // [!code focus]
+// export const runtime = 'edge' // [!code focus]
+
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+
+export const GET = handle(app) // [!code focus]
+export const POST = handle(app) // [!code focus]
+```
+
+:::tip
+
+**Next.js Pages Router**
+
+If your app is relying on the page router, the exports will change slightly:
+
+```tsx twoslash [pages/api/[[...route]].ts]
+// @noErrors
+export default handle(app); // [!code focus]
+```
+
+:::
+
+### Setup Devtools
+
+Add Frog [Devtools](/concepts/devtools) after all frames are defined. This way the devtools can automatically discover all your frames.
+
+```tsx twoslash [app/api/[[...routes]]/route.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+import { handle } from 'frog/next'
+import { devtools } from 'frog/dev' // [!code focus]
+import { serveStatic } from 'frog/serve-static' // [!code focus]
+
+const app = new Frog({ 
+  basePath: '/api',
+})
+
+app.frame('/', (c) => {
+  ...
+})
+
+devtools(app, { serveStatic }) // [!code focus]
+// @log: ^ Devtools should be called after all frames are defined.
+
+export const GET = handle(app)
+export const POST = handle(app)
+```
+
+### Add Scripts to `package.json`
+
+Then we will add a Wrangler scripts to our `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "next dev", // [!code focus]
+    "build": "next build", // [!code focus]
+    "deploy": "vercel", // [!code focus]
+    "start": "next start", // [!code focus]
+    "lint": "next lint" // [!code focus]
+  },
+  "dependencies": {
+    "hono": "latest",
+    "frog": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "vercel": "latest",
+  },
+}
+
+```
+
+### Navigate to Frame
+
+Then, we can navigate to our frame in the browser:
+
+`npm run dev`
+
+`http://localhost:3000/api`
+
+### Bonus: Deploy
+
+When ready, we can deploy our application.
+
+This example deploys to Vercel via the Vercel CLI (`vercel`), but you can use any platform that supports Next.js
+
+```bash
+npm run deploy
+```
+
+### Bonus: Add Browser Redirects
+
+If a user navigates to your frame in the browser, we may want to redirect them 
+to the correct Next.js page route that corresponds to the frame.
+
+In the example below, when a user navigates to the `/api/foo` path of the website via their web browser, 
+they will be redirected to the `/foo` path (ie. `/app/foo/page.tsx` in your Next.js App).
+
+[Read more on Browser Redirects](/concepts/browser-redirects)
+
+```tsx twoslash [app/api/[[...routes]]/route.tsx]
+// @noErrors
+// ---cut---
+/** @jsxImportSource frog/jsx */
+import { Button, Frog, TextInput } from 'frog'
+import { handle } from 'frog/next'
+
+const app = new Frog({ 
+  basePath: '/api',
+  browserLocation: '/:path', // [!code focus]
+})
+
+// Uncomment to use Edge Runtime
+// export const runtime = 'edge'
+
+app.frame('/foo', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+
+export const GET = handle(app) 
+export const POST = handle(app) 
+```
+
+### Bonus: Page & Frame Co-location
+
+If a user shares a link to your website, we may want to render the frame in the page route
+itself, instead of forcing them to share a link to the Frog API route.
+
+In the example below, when a user shares the `/` (= `/page.tsx` in your Next.js App) 
+path of the website on Warpcast, they will be able to see the frame. 
+This leverages the [`generateMetadata`](https://nextjs.org/docs/app/api-reference/functions/generate-metadata#generatemetadata-function) function built-in to Next.js
+
+```tsx twoslash [app/page.tsx]
+// @noErrors
+import { getFrameMetadata } from 'frog/next'
+import type { Metadata } from 'next'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const url = process.env.VERCEL_URL || 'http://localhost:3000'
+  const frameMetadata = await getFrameMetadata(`${url}/api`)
+  return {
+    other: frameMetadata,
+  }
+}
+```
+
+::::tip
+
+**Warpcast does not support streamed responses**
+
+If you use suspended components in a page, route Next.js will stream the response. Since Warpcast does not support stream responses for frames, you can use the `isFrameRequest` utility to selectively render suspended components depending on the requester.
+
+:::code-group
+```tsx twoslash [app/page.tsx]
+// @noErrors
+import { headers } from 'next/headers'
+import type { Metadata } from 'next'
+import { getFrameMetadata, isFrameRequest } from 'frog/next'
+
+import { SuspendedComponent } from './suspense-component'
+
+export default function Page() {
+  if (isFrameRequest(headers())) return null // [!code focus]
+  return <SuspendedComponent />
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const url = process.env.VERCEL_URL || 'http://localhost:3000'
+  const frameMetadata = await getFrameMetadata(`${url}/api`)
+  return {
+    other: frameMetadata,
+  }
+}
+```
+```tsx twoslash [app/suspense-component.tsx]
+// @noErrors
+import { Suspense } from 'react'
+
+export function SuspendedComponent() {
+  return (
+    <Suspense fallback={<>Loading</>}>
+      <ComponentThrowingSuspense />
+    </Suspense>
+  )
+}
+```
+:::
+::::

@@ -1,0 +1,17 @@
+{
+  "name": "playground",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "node --import tsx ../src/cli/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.8.2",
+    "frog": "workspace:*",
+    "hono": "^4"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.1"
+  }
+}

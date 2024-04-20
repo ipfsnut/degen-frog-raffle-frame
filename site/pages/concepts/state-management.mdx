@@ -1,0 +1,81 @@
+# State Management
+
+State Management in **Frog** looks a bit different to what you might be used to with client-side web frameworks such as: React, Vue, Svelte, etc. 
+The critical difference is that **Frog** has no sense of "reactivity" and "interactivity" as it is purely server-side image rendering.
+
+State Management in **Frog** is achieved through "state derivation", and we can use the `deriveState` function to
+derive new state based on the previous state.
+
+Essentially, `state = deriveState(previousState)`.
+
+Here's an example of a simple counter:
+
+```tsx twoslash
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+
+type State = {     // [!code focus]
+  count: number // [!code focus]
+} // [!code focus]
+ 
+export const app = new Frog<{ State: State }>({ // [!code focus]
+  initialState: { // [!code focus]
+    count: 0 // [!code focus]
+  } // [!code focus]
+}) // [!code focus]
+ 
+app.frame('/', (c) => {
+  const { buttonValue, deriveState } = c  // [!code focus]
+  const state = deriveState(previousState => { // [!code focus]
+    if (buttonValue === 'inc') previousState.count++ // [!code focus]
+    if (buttonValue === 'dec') previousState.count-- // [!code focus]
+  }) // [!code focus]
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        Count: {state.count} // [!code focus]
+      </div>
+    ),
+    intents: [
+      <Button value="inc">Increment</Button>, // [!code focus]
+      <Button value="dec">Decrement</Button>, // [!code focus]
+    ]
+  })
+})
+```
+
+:::tip[Tip]
+`deriveState` can also be asynchronous:
+
+```tsx twoslash
+// @noErrors
+/** @jsxImportSource frog/jsx */
+import { Button, Frog } from 'frog'
+
+type State = {    
+  count: number
+}
+ 
+export const app = new Frog<{ State: State }>({
+  initialState: {
+    count: 0
+  }
+})
+ 
+// ---cut---
+app.frame('/', (c) => {
+  const { deriveState, frameData } = c  
+  const state = await deriveState(async previousState => { // [!code focus]
+    previousState.count = await fetchCount(frameData.fid) // [!code focus]
+  }) // [!code focus]
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        Count: {state.count} 
+      </div>
+    )
+  })
+})
+```
+:::

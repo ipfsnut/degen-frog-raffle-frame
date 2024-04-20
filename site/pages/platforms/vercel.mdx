@@ -1,0 +1,247 @@
+# Vercel Serverless
+
+## Quick Start
+
+You can scaffold a Frog project with Vercel Serverless integrated via the `create-frog` CLI:
+
+:::code-group
+
+```bash [npm]
+npm init frog -- -t vercel
+```
+
+```bash [pnpm]
+pnpm create frog -t vercel
+```
+
+```bash [yarn]
+yarn create frog -t vercel
+```
+
+```bash [bun]
+bunx create-frog -t vercel
+```
+
+:::
+
+## Manual Installation
+
+::::steps
+
+### Install Vercel
+
+```bash
+npm install vercel --save-dev
+```
+
+### Build your Frame
+
+Next, scaffold your frame:
+
+```tsx twoslash [api/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+
+// Uncomment to use Edge Runtime.
+// export const config = {
+//   runtime: 'edge',
+// }
+
+export const app = new Frog({ 
+  basePath: '/api',
+})
+
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+```
+
+:::warning
+Feel free to use our public Hub API URL for [frame verification](https://docs.farcaster.xyz/reference/frames/spec#securing-frames:~:text=Unsigned%20messages%20can%20be%20spoofed%20and%20should%20usually%20be%20ignored.%20It%20is%20only%20safe%20to%20use%20them%20if%20you%20are%20performing%20an%20unauthenticated%20request.): `https://api.hub.wevm.dev`.
+
+However, please note that this URL is not guaranteed to be stable. 
+It is recommended to use your own Hub API URL in production.
+:::
+
+### Add Vercel Handlers
+
+After that, we will append Vercel handlers to the file.
+
+```tsx twoslash [api/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+import { handle } from 'frog/vercel' // [!code focus]
+
+// Uncomment to use Edge Runtime.
+// export const config = {
+//   runtime: 'edge',
+// }
+
+export const app = new Frog({ 
+  basePath: '/api',
+})
+
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+
+export const GET = handle(app) // [!code focus]
+export const POST = handle(app) // [!code focus]
+```
+### Setup Devtools
+
+Add Frog [Devtools](/concepts/devtools) after all frames are defined. This way the devtools can automatically discover all your frames.
+
+```tsx twoslash [api/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+import { handle } from 'frog/vercel'
+import { devtools } from 'frog/dev' // [!code focus]
+import { serveStatic } from 'frog/serve-static' // [!code focus]
+
+export const app = new Frog({ 
+  basePath: '/api',
+})
+
+app.frame('/', (c) => {
+  ...
+})
+
+// @log: Devtools should be called after all frames are defined.
+if (import.meta.env?.MODE === 'development') devtools(app, { serveStatic })
+else devtools(app, { assetsPath: '/.frog' })
+
+export const GET = handle(app)
+export const POST = handle(app)
+```
+
+### Add Scripts to `package.json`
+
+Then we will add a `build` & `deploy` script to deploy our Vercel Serverless function.
+
+```json
+{
+  "scripts": {
+    "build": "frog vercel-build", // [!code focus]
+    "dev": "frog dev", // [!code focus]
+    "deploy": "vercel" // [!code focus]
+  },
+  "dependencies": {
+    "hono": "latest",
+    "frog": "latest"
+  },
+  "devDependencies": {
+    "vercel": "latest"
+  }
+}
+```
+
+### Navigate to Frame
+
+Then, we can navigate to our frame in the browser:
+
+`npm run dev`
+
+`http://localhost:5173/api`
+
+### Bonus: Deploy
+
+When ready, we can deploy our application.
+
+This example deploys to Vercel via the Vercel CLI (`vercel`).
+
+```bash
+npm run deploy
+```
+
+### Bonus: Browser Redirects
+
+If a user navigates to your frame in the browser, we may want to redirect them 
+to another webpage that corresponds to the frame.
+
+In the example below, when a user navigates to the `/api/` path of the website via their web browser, 
+they will be redirected to the `/` path.
+
+[Read more on Browser Redirects](/concepts/browser-redirects)
+
+```tsx twoslash [api/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+import { handle } from 'frog/vercel' 
+
+// Uncomment to use Edge Runtime.
+// export const config = {
+//   runtime: 'edge',
+// }
+
+export const app = new Frog({ 
+  basePath: '/api',
+  browserLocation: '/:path' // [!code focus]
+})
+
+app.frame('/', (c) => { // [!code focus]
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+
+export const GET = handle(app) 
+export const POST = handle(app) 
+```
+
+
+::::

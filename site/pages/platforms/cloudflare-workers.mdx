@@ -1,0 +1,234 @@
+# Cloudflare Workers
+
+[Cloudflare Workers](https://workers.cloudflare.com/) enable you to deploy serverless code instantly across the globe to give it exceptional performance, reliability, and scale.
+
+## Quick Start
+
+You can scaffold a Frog project with Cloudflare Workers integrated via the `create-frog` CLI:
+
+:::code-group
+
+```bash [npm]
+npm init frog -- -t cloudflare-worker
+```
+
+```bash [pnpm]
+pnpm create frog -t cloudflare-worker
+```
+
+```bash [yarn]
+yarn create frog -t cloudflare-worker
+```
+
+```bash [bun]
+bunx create-frog -t cloudflare-worker
+```
+
+:::
+
+## Manual Installation
+
+::::steps
+
+### Install Wrangler
+
+```bash
+npm install wrangler --save-dev
+```
+
+### Build your Frame
+
+Next, scaffold your frame:
+
+```tsx twoslash [src/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+
+export const app = new Frog()
+
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+```
+
+:::warning
+Feel free to use our public Hub API URL for [frame verification](https://docs.farcaster.xyz/reference/frames/spec#securing-frames:~:text=Unsigned%20messages%20can%20be%20spoofed%20and%20should%20usually%20be%20ignored.%20It%20is%20only%20safe%20to%20use%20them%20if%20you%20are%20performing%20an%20unauthenticated%20request.): `https://api.hub.wevm.dev`.
+
+However, please note that this URL is not guaranteed to be stable. 
+It is recommended to use your own Hub API URL in production.
+:::
+
+### Export Default
+
+After that, we export our app via the `default` export.
+
+```tsx twoslash  [src/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+
+export const app = new Frog()
+
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+
+export default app // [!code focus]
+```
+
+### Setup Devtools
+
+Add Frog [Devtools](/concepts/devtools) after all frames are defined. This way the devtools can automatically discover all your frames.
+
+```tsx twoslash [src/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+import { devtools } from 'frog/dev' // [!code focus]
+import { serveStatic } from 'frog/serve-static' // [!code focus]
+
+export const app = new Frog()
+
+app.frame('/', (c) => {
+  ...
+})
+
+// @log: Devtools should be called after all frames are defined.
+const isCloudflareWorker = typeof caches !== 'undefined' // [!code focus]
+if (isCloudflareWorker) { // [!code focus]
+  devtools(app, { // [!code focus]
+    serveStatic, // [!code focus]
+    serveStaticOptions: { // [!code focus]
+      assetsPath: '/frog', // [!code focus]
+      manifest: await import('__STATIC_CONTENT_MANIFEST'), // [!code focus]
+      root: './', // [!code focus]
+    }, // [!code focus]
+  }) // [!code focus]
+} else { // [!code focus]
+  devtools(app, { serveStatic }) // [!code focus]
+} // [!code focus]
+
+export default app
+```
+
+### Add Scripts to `package.json`
+
+Then we will add a Wrangler scripts to our `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "frog dev", // [!code focus]
+    "wrangler:dev": "wrangler dev src/index.tsx",  // [!code focus]
+    "wrangler:deploy": "wrangler deploy --minify src/index.tsx", // [!code focus]
+    "wrangler:static": "cp -r ./node_modules/frog/_lib/ui/.frog ./public/frog" // [!code focus]
+  },
+  "dependencies": {
+    "hono": "latest",
+    "frog": "latest"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "wrangler": "latest",
+  }
+}
+```
+
+### Navigate to Frame
+
+Then, we can navigate to our frame in the browser:
+
+`npm run dev`
+
+`http://localhost:5173`
+
+### Bonus: Deploy
+
+When ready, we can deploy our application.
+
+This example deploys to Cloudflare via the Wrangler CLI (`wrangler`).
+
+```bash
+npm run wrangler:deploy
+```
+
+### Bonus: Browser Redirects
+
+If a user navigates to your frame in the browser, we may want to redirect them 
+to another webpage that corresponds to the frame.
+
+In the example below, when a user navigates to the `/frame/foo` path of the website via their web browser, 
+they will be redirected to the `/foo` path.
+
+[Read more on Browser Redirects](/concepts/browser-redirects)
+
+```tsx twoslash  [src/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+
+export const app = new Frog({
+  browserLocation: '/:path', // [!code focus]
+})
+
+app.frame('/frame/:path', (c) => { // [!code focus]
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+
+export default app // [!code focus]
+```
+
+::::

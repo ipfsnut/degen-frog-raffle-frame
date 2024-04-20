@@ -1,0 +1,251 @@
+# Overview [High-level overview of the Frog API] 
+
+**Frog** is built on top of [Hono](https://hono.dev/) (a fast & lightweight Web Framework), 
+extended with a first-class API for Farcaster Frames. 
+
+If you are familiar with other Web Frameworks such as [Express](https://expressjs.com/), [Koa](https://koajs.com/), or [Fastify](https://fastify.dev/),
+then the **Frog** (and Hono) API should seem familiar to you.
+
+At a high-level, the most basic **Frog** application looks like this:
+
+```tsx twoslash [src/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+ 
+export const app = new Frog()
+ 
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+```
+
+:::tip[Tip]
+Hover over the variables above to get a feel for the API.
+:::
+
+Below, we will break down high-level concepts of the above example.
+
+## Imports
+
+Before we can instantiate an application, we need to import the `Frog` class.
+
+```tsx twoslash
+import { Button, Frog } from 'frog' // [!code focus]
+ 
+export const app = new Frog()
+
+// ...
+```
+
+:::note
+**Frog** also exports a set of [Intents](/intents/button) (e.g. `<Button>{:jsx}`, `<TextInput>{:jsx}`, etc).
+:::
+
+## Instantiation
+
+We instantiate a new **Frog** application by calling the `Frog` class.
+
+```tsx twoslash
+// @noErrors
+import { Button, Frog } from 'frog'
+ 
+export const app = new Frog() // [!code focus]
+
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  // ...
+```
+
+:::note
+**Why do we export `app`?**
+
+We export `app` so that the [Dev Server](/getting-started#add-scripts-to-packagejson) (`frog dev`) can use it.
+:::
+
+You can pass optional [constructor parameters](/reference/frog#constructor-parameters) to `new Frog(){:js}` to:
+
+- Set a [Base Path](/reference/frog#basepath) for your application,
+- Set a [Redirect URL](/reference/frog#browserlocation) if the user is coming from a browser,
+- Set a custom [Hub](/reference/frog#hub),
+- Set custom [Hono Options](/reference/frog#honooptions),
+- Set [Initial State](/reference/frog#initialstate) for your frame,
+- Specify whether or not frames should be [verified](/reference/frog#verify).
+
+## Routing
+
+Similar to `.post`, `.get`, `.put`, etc in other Web Frameworks, **Frog** uses `.frame` to define a new frame route.
+
+Internally, the frame route automatically handles `GET` and `POST` requests sent by Farcaster clients such as Warpcast to
+get frame metadata.
+
+```tsx twoslash
+// @noErrors
+import { Button, Frog } from 'frog'
+ 
+// ---cut---
+export const app = new Frog()
+
+app.frame('/', (c) => { // [!code focus]
+  return c.res({/* ... */})
+})
+```
+
+:::tip[Tip]
+A frame handler can also be asynchronous (ie. `async (c) => { ... }{:js}`).
+:::
+
+You can also define multiple routes by specifying alternative paths.
+
+```tsx twoslash
+// @noErrors
+import { Button, Frog } from 'frog'
+ 
+// ---cut---
+export const app = new Frog()
+
+app.frame('/', (c) => { // [!code focus]
+  return c.res({/* ... */})
+})
+
+app.frame('/foo', (c) => { // [!code focus]
+  return c.res({/* ... */})
+})
+
+app.frame('/bar', (c) => { // [!code focus]
+  return c.res({/* ... */})
+})
+```
+
+You can also define `GET`, `POST`, etc routes via the [Hono](https://hono.dev) instance.
+
+```tsx twoslash
+// @noErrors
+import { Button, Frog } from 'frog'
+ 
+// ---cut---
+export const app = new Frog()
+
+app.frame('/', (c) => {
+  return c.res({/* ... */})
+})
+
+app.hono.get('/healthcheck', (c) => { // [!code focus]
+  return c.text('ribbit')
+})
+```
+
+This only scratches the surface of Routing in **Frog**. For more advanced routing, check out the [Routing](/concepts/routing) section.
+
+## Context
+
+The `c` parameter in the frame route contains properties about the frame, such as: 
+
+- The [frame data](/reference/frog-frame-context#framedata) (ie. `trustedData`/`untrustedData`),
+- The [button index/value](/reference/frog-frame-context#buttonvalue) or [input value](/reference/frog-frame-context#inputvalue) that was interacted with,
+- A function to [derive and set state](/reference/frog-frame-context#derivestate),
+- The [initial/start path](/reference/frog-frame-context#initialpath) of the frame,
+- The [current URL](/reference/frog-frame-context#url) of the frame,
+- and [more](/reference/frog-frame-context).
+
+```tsx twoslash
+// @noErrors
+import { Button, Frog } from 'frog'
+ 
+// ---cut---
+export const app = new Frog()
+
+app.frame('/', (c) => { // [!code focus]
+  const { buttonValue, inputText, status, verified } = c // [!code focus]
+  return c.res({/* ... */})
+})
+```
+
+[Read more on Context](/reference/frog-frame-context).
+
+## Images & Intents 
+
+Farcaster Frames have two main UI components: an **Image**, and a set of **Intents**:
+
+![Images & Intents](/images-intents.png)
+
+We can represent this in the **Frog** API via the `image` and `intents` properties of the frame route:
+
+```tsx twoslash [src/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+import { Button, Frog } from 'frog'
+ 
+export const app = new Frog()
+// ---cut---
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: ( // [!code focus]
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}> // [!code focus]
+        {status === 'initial' ? ( // [!code focus]
+          'Select your fruit!' // [!code focus]
+        ) : ( // [!code focus]
+          `Selected: ${buttonValue}` // [!code focus]
+        )} // [!code focus]
+      </div> // [!code focus]
+    ), // [!code focus]
+    intents: [ // [!code focus]
+      <Button value="apple">Apple</Button>, // [!code focus]
+      <Button value="banana">Banana</Button>, // [!code focus]
+      <Button value="mango">Mango</Button> // [!code focus]
+    ] // [!code focus]
+  }) // [!code focus]
+})
+```
+
+[Read more on Images & Intents](/concepts/images-intents).
+
+## Dev Server & Devtools
+
+To get a live preview of our frames, we can attach the Frog Devtools to our app.
+
+```tsx twoslash [src/index.tsx]
+// @noErrors
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { devtools } from 'frog/dev' // [!code focus]
+import { serveStatic } from 'frog/serve-static' // [!code focus]
+ 
+export const app = new Frog()
+ 
+app.frame('/', (c) => { ... })
+
+devtools(app, { serveStatic }) // [!code focus]
+```
+
+Then, spin up a local dev server using the `frog dev` command:
+
+```bash
+frog dev
+```
+
+This will start a dev server at [`http://localhost:5173`](http://localhost:5173).
+
+Then you can head to the `/dev` route ([`http://localhost:5173/dev`](http://localhost:5173/dev)) to see a live preview (with live reloading) of your frame.
+
+![Frog Devtools](/devtools.png)
+
+[Learn more about Frog's built-in devtools](/concepts/devtools).

@@ -1,0 +1,128 @@
+{
+  "name": "frog",
+  "description": "Framework for Farcaster Frames",
+  "version": "0.8.5",
+  "type": "module",
+  "module": "_lib/index.js",
+  "types": "_lib/index.d.ts",
+  "typings": "_lib/index.d.ts",
+  "bin": {
+    "frog": "./_lib/cli/index.js"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./_lib/index.d.ts",
+      "bun": "./_lib/index.js",
+      "edge": "./_lib/edge/index.js",
+      "edge-light": "./_lib/edge/index.js",
+      "worker": "./_lib/edge/index.js",
+      "default": "./_lib/index.js"
+    },
+    "./client": {
+      "types": "./types/client.d.ts"
+    },
+    "./dev": {
+      "types": "./_lib/dev/index.d.ts",
+      "edge": "./_lib/dev/edge/index.js",
+      "edge-light": "./_lib/dev/edge/index.js",
+      "default": "./_lib/dev/index.js"
+    },
+    "./edge": {
+      "types": "./_lib/index.d.ts",
+      "default": "./_lib/edge/index.js"
+    },
+    "./hubs": {
+      "types": "./_lib/hubs/index.d.ts",
+      "default": "./_lib/hubs/index.js"
+    },
+    "./jsx": {
+      "types": "./_lib/jsx/index.d.ts",
+      "default": "./_lib/jsx/index.js"
+    },
+    "./jsx/jsx-runtime": {
+      "types": "./_lib/jsx/jsx-runtime/index.d.ts",
+      "default": "./_lib/jsx/jsx-runtime/index.js"
+    },
+    "./jsx/jsx-dev-runtime": {
+      "types": "./_lib/jsx/jsx-dev-runtime/index.d.ts",
+      "default": "./_lib/jsx/jsx-dev-runtime/index.js"
+    },
+    "./middlewares": {
+      "types": "./_lib/middlewares/index.d.ts",
+      "default": "./_lib/middlewares/index.js"
+    },
+    "./next": {
+      "types": "./_lib/next/index.d.ts",
+      "default": "./_lib/next/index.js"
+    },
+    "./serve-static": {
+      "types": "./_lib/serve-static/index.d.ts",
+      "bun": "./_lib/serve-static/bun.js",
+      "edge": "./_lib/serve-static/noop.js",
+      "edge-light": "./_lib/serve-static/noop.js",
+      "worker": "./_lib/serve-static/worker.js",
+      "default": "./_lib/serve-static/index.js"
+    },
+    "./ui": {
+      "types": "./_lib/ui/index.d.ts",
+      "default": "./_lib/ui/index.js"
+    },
+    "./vercel": {
+      "types": "./_lib/vercel/index.d.ts",
+      "default": "./_lib/vercel/index.js"
+    }
+  },
+  "peerDependencies": {
+    "hono": "^4",
+    "typescript": ">=5.0.4"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^1.7.2",
+    "@hono/node-server": "^1.8.2",
+    "@hono/valibot-validator": "^0.2.2",
+    "@noble/curves": "^1.3.0",
+    "@noble/hashes": "^1.3.3",
+    "cac": "^6.7.14",
+    "csstype": "^3.1.3",
+    "detect-browser": "^5.3.0",
+    "dom-parser": "^1.1.5",
+    "fast-glob": "3.3.2",
+    "fs-extra": "^11.2.0",
+    "hono-og": "0.0.27",
+    "jose": "^5.2.2",
+    "lz-string": "^1.5.0",
+    "path-browserify": "^1.0.1",
+    "valibot": "^0.30.0",
+    "viem": "^2.7.10",
+    "vite": "^5.1.3"
+  },
+  "license": "MIT",
+  "homepage": "https://frog.fm",
+  "repository": "wevm/frog",
+  "authors": [
+    "awkweb.eth",
+    "jxom.eth"
+  ],
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/wevm"
+    }
+  ],
+  "keywords": [
+    "eth",
+    "ethereum",
+    "dapps",
+    "wallet",
+    "web3",
+    "farcaster",
+    "frame",
+    "frames"
+  ]
+}

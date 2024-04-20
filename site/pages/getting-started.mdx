@@ -1,0 +1,166 @@
+# Getting started [Get up and running in under a minute]
+
+Frog is a framework built on top of [Hono](https://hono.dev) for building [Farcaster Frames](https://docs.farcaster.xyz/learn/what-is-farcaster/frames). 
+Frog enables you to build frames with [JSX](https://hono.dev/guides/jsx), integrated onto any platform (Next.js, Vercel, Cloudflare, etc).
+
+```tsx twoslash
+/** @jsxImportSource frog/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+ 
+export const app = new Frog()
+ 
+app.frame('/', (c) => {
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        Select your fruit!
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+```
+
+## Quick Start
+
+### Bootstrap via CLI
+
+Scaffold a new project with the command line:
+
+:::code-group
+
+```bash [npm]
+npm init frog
+```
+
+```bash [pnpm]
+pnpm create frog
+```
+
+```bash [yarn]
+yarn create frog
+```
+
+```bash [bun]
+bunx create-frog
+```
+
+:::
+
+### Bootstrap via Vercel
+
+Scaffold a new project and deploy it instantly with Vercel:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwevm%2Ffrog%2Ftree%2Fmain%2Ftemplates%2Fvercel)
+
+## Manual Installation
+
+You can install Frog in an existing project, or start from scratch, by installing Frog as a dependency.
+
+::::steps
+
+### Install
+
+First, we will install `frog` as a dependency in our project along with its [`hono`](https://hono.dev) peer dependency.
+
+:::code-group
+
+```bash [npm]
+npm i frog hono
+```
+
+```bash [pnpm]
+pnpm i frog hono
+```
+
+```bash [yarn]
+yarn add frog hono
+```
+
+```bash [bun]
+bun i frog hono
+```
+
+:::
+
+- [Hono](https://github.com/honojs/hono) is a small, simple, and ultrafast web framework for the Edges.
+- [TypeScript](https://github.com/microsoft/TypeScript) is optional, but highly recommended.
+
+### Build your First Frame
+
+
+```tsx twoslash [src/index.tsx]
+// @noErrors
+/** @jsxImportSource hono/jsx */
+// ---cut---
+import { Button, Frog } from 'frog'
+import { devtools } from 'frog/dev'
+import { serveStatic } from 'frog/serve-static'
+
+export const app = new Frog()
+
+app.frame('/', (c) => {
+  const { buttonValue, status } = c
+  return c.res({
+    image: (
+      <div style={{ color: 'white', display: 'flex', fontSize: 60 }}>
+        {status === 'initial' ? (
+          'Select your fruit!'
+        ) : (
+          `Selected: ${buttonValue}`
+        )}
+      </div>
+    ),
+    intents: [
+      <Button value="apple">Apple</Button>,
+      <Button value="banana">Banana</Button>,
+      <Button value="mango">Mango</Button>
+    ]
+  })
+})
+
+devtools(app, { serveStatic })
+```
+
+### Add Scripts to `package.json`
+
+After that, let's add a script to our `package.json` to serve our frame.
+
+```json [package.json]
+{
+  "name": "example",
+  "version": "0.0.0",
+  "scripts": { 
+    "dev": "frog dev", // [!code focus]
+  },
+  "dependencies": {
+    "frog": "latest",
+    "hono": "latest"
+  },
+  "devDependencies": {
+    "typescript": "latest"
+  }
+}
+```
+
+### Run
+
+Next, run the development server:
+
+```bash [Terminal]
+npm run dev
+```
+
+Then open up your browser to `http://localhost:5173/dev`, and you can see your first frame!
+
+### Next steps
+
+Now that you have your first frame up and running, you can check out Frog's [Concepts](/concepts/overview) to learn more about
+how to build, structure, and deploy your frames.
+
+::::
